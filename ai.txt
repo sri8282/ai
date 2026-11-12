@@ -1,0 +1,231 @@
+1b
+
+
+import ollama
+
+prompt = """
+Write a Python function named n_nat_numbers(n)
+that returns numbers from 0 to n as a list.
+Return only Python code.
+"""
+
+response = ollama.chat(
+    model="qwen2.5-coder:3b",
+    messages=[{"role": "user", "content": prompt}]
+)
+
+code = response["message"]["content"]
+code = code.replace("```python", "").replace("```", "").strip()
+
+print("Generated Code:")
+print(code)
+
+namespace = {}
+exec(code, namespace)
+
+# 3. Test cases
+tests = [
+    (0, [0]),
+    (3, [0, 1, 2, 3]),
+    (5, [0, 1, 2, 3, 4, 5])
+]
+
+for n, expected in tests:
+    actual = namespace["n_nat_numbers"](n)
+
+    if actual == expected:
+        print("PASS:", n, actual)
+    else:
+        print("FAIL:", n, actual)
+
+
+
+-----------------------------------------------
+2EX GAN 
+
+
+
+import ollama
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+
+real = [
+    "def add(a,b): return a+b",
+    "def square(n): return n*n",
+    "def even(n): return n%2==0",
+    "def maximum(a,b): return max(a,b)"
+]
+
+prompts = [
+    "Write a Python function to subtract two numbers.",
+    "Write a Python function to multiply two numbers.",
+    "Write a Python function to check odd number.",
+    "Write a Python function to calculate cube."
+]
+
+fake = []
+
+for p in prompts:
+    r = ollama.generate(
+        model="qwen2.5-coder:3b",
+        prompt=p + " Return only Python code."
+    )
+    fake.append(r["response"])
+
+print("Generated code:")
+print(fake[0])
+
+# 3. Prepare dataset
+X = real + fake
+y = [1]*len(real) + [0]*len(fake)
+
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(X)
+
+model = LogisticRegression()
+model.fit(X, y)
+
+sample = [real[0], fake[0]]
+prediction = model.predict(vectorizer.transform(sample))
+
+for p in prediction:
+    print("Prediction:", "Real" if p == 1 else "Generated")
+
+
+-----------------------------------------------
+4 CODE COMPLETION 
+
+
+import ollama
+
+code = """
+def factorial(n):
+"""
+
+prompt = f"""
+Complete this Python code:
+{code}
+Return only the completed code.
+"""
+
+response = ollama.generate(
+    model="qwen2.5-coder:3b",
+    prompt=prompt
+)
+
+print(response["response"])
+
+
+-----------------------------------------------
+5 PESUDO CODE INTO REAL CODE 
+
+
+import ollama
+
+pseudo = """
+Read two numbers a and b.
+If a is greater than b, print a.
+Otherwise, print b.
+"""
+
+prompt = f"""
+Convert this pseudocode into Python code:
+{pseudo}
+Return only Python code.
+"""
+
+response = ollama.generate(
+    model="qwen2.5-coder:3b",
+    prompt=prompt
+)
+
+code = response["response"]
+print(code)
+
+-----------------------------------------------
+
+
+
+import ast
+
+code = """
+def add_numbers(a: int, b: int) -> int:
+    return a + b
+"""
+Syntax
+tests = [((2, 3), 5), ((10, 20), 30),
+         ((-2, 2), 0), ((0, 0), 0)]
+
+try:
+    ast.parse(code)
+    syntax = True
+    print("Syntax: Valid")
+except SyntaxError:
+    syntax = False
+    print("Syntax: Invalid")
+
+print("Static Analysis: Code reviewed")
+
+print("Type Checking: Type annotations present")
+
+namespace = {}
+exec(code, namespace)
+
+passed = 0
+for args, expected in tests:
+    actual = namespace["add_numbers"](*args)
+    if actual == expected:
+        passed += 1
+        print("PASS:", args)
+
+score = (15 if syntax else 0) + 20 + 15
+score += 40 * passed / len(tests) + 10
+
+print("Quality Score:", score, "/100")
+print("Suggestions: Add more test cases.")
+
+
+
+
+
+----------------------------------------------------------------------------------------------
+
+
+
+SETUP (simple commands)
+
+Step 1 – Create a virtual environment
+You are already inside your CodeNest_Friend_Code folder. Run:
+
+python3 -m venv venv
+
+
+Step 2 – Activate it-
+
+source venv/bin/activate
+
+STEP 1 – Install Ollama
+Download and install Ollama from:
+https://ollama.com/download
+
+Open Ollama and keep it running.
+
+STEP 2 – Download the AI model
+Open Terminal / Command Prompt and run:
+ollama pull qwen2.5-coder:3b
+
+Check that it is installed:
+ollama list
+
+STEP 3 – Install Python packages
+For Experiments 1b, 4 and 5:
+pip install ollama
+
+For Experiment 2:
+pip install ollama scikit-learn
+
+
+
+
+
+
